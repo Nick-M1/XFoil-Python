@@ -12,7 +12,3 @@ iterations:
   alpha_i: -2
   alpha_f: 20
   alpha_step: 0.1
-
-# For Single alpha or cl calc
-single:
-  alpha: 5
