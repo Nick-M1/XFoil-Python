@@ -1,0 +1,18 @@
+setup:
+  xfoil_path: "C:/Users/nicho/OneDrive/Documents/XFoil"      # Path to xfoil directory
+  n_panelnodes: 400
+  n_iter: 400
+
+variables:
+  cl_required: 0.576
+  Re: -1                # If Re == -1, then inviscid flow, else viscous flow
+
+# For Iterations calc
+iterations:
+  alpha_i: -2
+  alpha_f: 20
+  alpha_step: 0.1
+
+# For Single alpha or cl calc
+single:
+  alpha: 5
