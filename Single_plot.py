@@ -118,11 +118,9 @@ def main(args: argparse.Namespace):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    # parser.add_argument("-i", "--input_path", help="Path of frames directory", default="PART_1-Vids/Temp-frames/Seg-files")
-    # parser.add_argument("-n", "--new_plot", help="wipes the ", default="PART_1-Vids/Outputs/output_vid.mp4")
 
     parser.add_argument('-n', '--aerofoil_names', nargs='+', default=[],
-                        help='NACA 4-digit aerofoils to test (in "NACAxxxx" form)')
+                        help='NACA 4-digit aerofoils to test (in "NACAxxxx" form). If left empty, will plot every aerofoil that has data in the directory')
 
     args = parser.parse_args()
     # print(args)
