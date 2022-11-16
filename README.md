@@ -1,7 +1,7 @@
 ![](resources/xfoil_logo.gif)
 
 # XFoil-Python
-Python API for XFoil
+XFoil API for Python
 
 ## SET-UP:
 
