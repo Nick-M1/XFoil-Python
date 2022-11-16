@@ -12,7 +12,6 @@ setup:
 
 variables:
   cl_required: 0.576
-  Re: 90500                # If Re == -1, then inviscid flow, else viscous flow
 
 
 # Variables specific to Sequence_calc.py & Sequence_plot.py

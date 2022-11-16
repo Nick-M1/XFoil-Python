@@ -7,16 +7,6 @@ import os
 from subprocess import Popen
 
 
-
-def restricted_float(x):
-    try:
-        x = float(x)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f"{x} not a floating-point literal")
-
-    return x
-
-
 def main(args: argparse.Namespace):
 
     # Open + read YAML config file
@@ -57,8 +47,8 @@ def main(args: argparse.Namespace):
             input_file.write("PANE\n")
             input_file.write("OPER\n")
 
-            if cfg['variables']['Re'] >= 0:
-                input_file.write(f"Visc {cfg['variables']['Re']}\n")
+            if args.reynolds_num >= 0:
+                input_file.write(f"Visc {args.reynolds_num}\n")
 
             input_file.write(f"ITER {cfg['setup']['n_iter']}\n")
 
@@ -81,8 +71,9 @@ def main(args: argparse.Namespace):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    # parser.add_argument("-i", "--input_path", help="Path of frames directory", default="PART_1-Vids/Temp-frames/Seg-files")
-    # parser.add_argument("-n", "--new_plot", help="wipes the ", default="PART_1-Vids/Outputs/output_vid.mp4")
+
+    parser.add_argument("-r", "--reynolds_num", type=restricted_integer, default=-1,
+                        help="Value of Reynolds Number as integer (-1 for inviscid flow)")
 
     parser.add_argument("-t", "--input_type", type=str, help="Calculate based off cl or alpha", required=True, choices=['cl', 'alpha'])
     parser.add_argument("-v", "--input_value", type=restricted_float, help="Value of cl or alpha", required=True)

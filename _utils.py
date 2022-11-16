@@ -1,3 +1,4 @@
+from argparse import ArgumentTypeError
 from enum import Enum
 from typing import Callable
 
@@ -23,3 +24,22 @@ def smooth_plot(x_original: np.ndarray, y_original: np.ndarray) -> (np.ndarray, 
     x_new = np.linspace(x_original[0], x_original[-1], 30)
     y_new = make_interp_spline(x_original, y_original, k=7)(x_new)
     return x_new, y_new
+
+
+# Restriction for argparse float arguments
+def restricted_float(x):
+    try:
+        x = float(x)
+    except ValueError:
+        raise ArgumentTypeError(f"{x} not a floating-point literal")
+    return x
+
+
+# Restriction for argparse int arguments
+def restricted_integer(x):
+    try:
+        x = int(x)
+    except ValueError:
+        raise ArgumentTypeError(f"{x} not an integer")
+
+    return x
