@@ -6,6 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+def outputfile_to_NACA(output_file: str) -> str:
+    return output_file[11: 19]
+
+
 def main(args: argparse.Namespace):
     # Open + read YAML config file
     with open('config.yaml', "r") as ymlfile:
@@ -18,7 +22,16 @@ def main(args: argparse.Namespace):
     getOutputFileName_ = getOutputFileName(OutputFiles.POLAR, cfg['setup']['polarfiles_dir'])
 
     # Map each 'NACAxxxx' from args.aerofoil_names to a tuple with its name '.txt' path
-    zipped_names: list[tuple[str, str]] = [(name, getOutputFileName_(name)) for name in args.aerofoil_names]
+    if args.aerofoil_names:
+        # If aerofoil_names given in arg, use these
+        zipped_names: list[tuple[str, str]] = [(name, getOutputFileName_(name)) for name in args.aerofoil_names]
+
+    else:
+        # If this arg is left empty, plot every aerofoil data in the POLARFILES dir
+        files_list = os.listdir(cfg['setup']['polarfiles_dir'])
+        zipped_names: list[tuple[str, str]] = \
+            [(outputfile_to_NACA(filename), f"{cfg['setup']['polarfiles_dir']}{filename}") for filename in files_list]
+
 
     # --------------------------------------------------------------------------
     # XFOIL PLOTTING
@@ -96,7 +109,7 @@ def main(args: argparse.Namespace):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-n', '--aerofoil_names', nargs='+', default=['NACA0012', 'NACA0013', 'NACA0014'],
+    parser.add_argument('-n', '--aerofoil_names', nargs='+', default=[],
                         help='NACA 4-digit aerofoils to test (in "NACAxxxx" form)')
 
     args = parser.parse_args()

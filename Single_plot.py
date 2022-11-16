@@ -15,8 +15,10 @@ def restricted_float(x):
         x = float(x)
     except ValueError:
         raise argparse.ArgumentTypeError(f"{x} not a floating-point literal")
-
     return x
+
+def outputfile_to_NACA(output_file: str) -> str:
+    return output_file[10: 18]
 
 
 def main(args: argparse.Namespace):
@@ -38,8 +40,20 @@ def main(args: argparse.Namespace):
     getOutputFileNameCPWR = getOutputFileName(OutputFiles.CPWR, cfg['setup']['cpwr_dir'])
 
     # Map each 'NACAxxxx' from args.aerofoil_names to a tuple with its name '.txt' path, for DUMP & CPWR
-    zipped_namesDUMP: list[tuple[str, str]] = [(name, getOutputFileNameDUMP(name)) for name in args.aerofoil_names]
-    zipped_namesCPWR: list[tuple[str, str]] = [(name, getOutputFileNameCPWR(name)) for name in args.aerofoil_names]
+    if args.aerofoil_names:
+        # If aerofoil_names given in arg, use these
+        zipped_namesDUMP: list[tuple[str, str]] = [(name, getOutputFileNameDUMP(name)) for name in args.aerofoil_names]
+        zipped_namesCPWR: list[tuple[str, str]] = [(name, getOutputFileNameCPWR(name)) for name in args.aerofoil_names]
+
+    else:
+        # If this arg is left empty, plot every aerofoil data in the DUMP & CPWR dirs
+        files_list = os.listdir(cfg['setup']['dump_dir'])
+        zipped_namesDUMP: list[tuple[str, str]] =\
+            [(outputfile_to_NACA(filename), f"{cfg['setup']['dump_dir']}{filename}") for filename in files_list]
+
+        files_list = os.listdir(cfg['setup']['cpwr_dir'])
+        zipped_namesCPWR: list[tuple[str, str]] =\
+            [(outputfile_to_NACA(filename), f"{cfg['setup']['cpwr_dir']}{filename}") for filename in files_list]
 
 
 
@@ -107,10 +121,9 @@ if __name__ == "__main__":
     # parser.add_argument("-i", "--input_path", help="Path of frames directory", default="PART_1-Vids/Temp-frames/Seg-files")
     # parser.add_argument("-n", "--new_plot", help="wipes the ", default="PART_1-Vids/Outputs/output_vid.mp4")
 
-    parser.add_argument('-n', '--aerofoil_names', nargs='+', default=['NACA0012', 'NACA0013', 'NACA0014'],
+    parser.add_argument('-n', '--aerofoil_names', nargs='+', default=[],
                         help='NACA 4-digit aerofoils to test (in "NACAxxxx" form)')
 
     args = parser.parse_args()
-    main(args)
-
     # print(args)
+    main(args)
