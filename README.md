@@ -1,3 +1,5 @@
+![](resources/xfoil_logo.gif)
+
 # XFoil-Python
 Python API for XFoil
 
@@ -107,3 +109,10 @@ The API is accessed via command line arguments. <p>
     `python Sequence_plot.py` <br>
     `python Sequence_plot.py -n NACA1418` <br>
     `python Sequence_plot.py -n NACA1416 NACA1417`
+
+
+### Further Details:
+For more details on using XFoil, visit <br>
+https://web.mit.edu/drela/Public/web/xfoil/ <p>
+
+![](resources/using_xfoil.jpg)
