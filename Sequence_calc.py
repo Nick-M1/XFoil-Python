@@ -1,17 +1,10 @@
+from _utils import *
 import argparse
 import time
-
 import yaml
 import os
 from subprocess import Popen
-import numpy as np
-import matplotlib.pyplot as plt
 
-
-
-
-def getOutputFileName(airfoil_name: str) -> str:
-    return f"polar_file_{airfoil_name}.txt"
 
 
 def main(args: argparse.Namespace):
@@ -23,13 +16,17 @@ def main(args: argparse.Namespace):
     # Set directory to the dir of XFOIL
     os.chdir(cfg['setup']['xfoil_path'])
 
+    # Create output folder (if it doesn't already exist)
+    if not os.path.isdir(cfg['setup']['polarfiles_dir']):
+        os.mkdir(cfg['setup']['polarfiles_dir'])
+
 
     # --------------------------------------------------------------------------
     # XFOIL input file writer
 
     for airfoil_name in args.aerofoil_names:
 
-        output_file_name = getOutputFileName(airfoil_name)
+        output_file_name = getOutputFileName(OutputFiles.POLAR, cfg['setup']['polarfiles_dir'])(airfoil_name)
 
         if args.delete_old and os.path.exists(output_file_name):
             os.remove(output_file_name)
@@ -53,7 +50,7 @@ def main(args: argparse.Namespace):
                 input_file.write("y\n\n")
 
             input_file.write(f"ITER {cfg['setup']['n_iter']}\n")
-            input_file.write(f"ASeq {cfg['iterations']['alpha_i']} {cfg['iterations']['alpha_f']} {cfg['iterations']['alpha_step']}\n")
+            input_file.write(f"ASeq {cfg['sequence_variables']['alpha_i']} {cfg['sequence_variables']['alpha_f']} {cfg['sequence_variables']['alpha_step']}\n")
 
             input_file.write("\n\n")
             input_file.write("quit\n")
@@ -74,7 +71,7 @@ if __name__ == "__main__":
     # parser.add_argument("-n", "--new_plot", help="wipes the ", default="PART_1-Vids/Outputs/output_vid.mp4")
 
     parser.add_argument('-o', '--delete_old', action='store_false', default=True,
-                        help='If NOT FLAGGED (true), deletes any previously stored data for inputted aerofoils, else if FLAGGED (false), appends new data to this reviously stored data')
+                        help='If NOT FLAGGED (true), deletes any previously stored data for inputted aerofoils, else if FLAGGED (false), appends new data to this previously stored data')
 
     parser.add_argument('-n', '--aerofoil_names', nargs='+', default=['NACA0012', 'NACA0013', 'NACA0014'],
                         help='NACA 4-digit aerofoils to test (in "NACAxxxx" form)')
@@ -83,56 +80,3 @@ if __name__ == "__main__":
     main(args)
 
     # print(args)
-
-
-"""
-
-
-
-# -------------------------------------------------------------------------------
-## PLOTTING DATA
-
-# Plotting CL Vs alpha
-plt.figure()
-for airfoil_name in airfoil_names:
-    polar_data = np.loadtxt(getOutputFileName(airfoil_name), skiprows=12)
-    plt.plot(polar_data[:, 0], polar_data[:, 1], label=airfoil_name)
-
-plt.axhline(y=cl_required, color='tab:pink', linestyle='-.', label='Min CL Required')
-plt.title("CL Vs Angle of attack")
-plt.xlabel("Angle of attack (deg)")
-plt.ylabel("CL")
-plt.grid()
-plt.legend()
-plt.show()
-
-
-# Plotting CD Vs alpha
-plt.figure()
-for airfoil_name in airfoil_names:
-    polar_data = np.loadtxt(getOutputFileName(airfoil_name), skiprows=12)
-    plt.plot(polar_data[:, 0], polar_data[:, 2], label=airfoil_name)
-
-plt.title("CD Vs Angle of attack")
-plt.xlabel("Angle of attack (deg)")
-plt.ylabel("CD")
-plt.grid()
-plt.legend()
-plt.show()
-
-
-# Plotting CL Vs CD
-plt.figure(3)
-for airfoil_name in airfoil_names:
-    polar_data = np.loadtxt(getOutputFileName(airfoil_name), skiprows=12)
-    plt.plot(polar_data[:, 2], polar_data[:, 1], label=airfoil_name)
-
-plt.axhline(y=cl_required, color='tab:pink', linestyle='-.', label='Min CL Required')
-plt.title("CL Vs CD")
-plt.xlabel("CD")
-plt.ylabel("CL")
-plt.grid()
-plt.legend()
-plt.show()
-
-# """

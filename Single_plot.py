@@ -1,5 +1,6 @@
 import argparse
 import time
+from _utils import *
 
 import yaml
 import os
@@ -8,14 +9,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-DIR_CPWR = ""
-DIR_DUMP = ""
-
-def getOutputFileNameDUMP(airfoil_name: str) -> str:
-    return f"{DIR_DUMP}dump_file_{airfoil_name}.txt"
-
-def getOutputFileNameCPWR(airfoil_name: str) -> str:
-    return f"{DIR_CPWR}cpwr_file_{airfoil_name}.txt"
 
 def restricted_float(x):
     try:
@@ -35,44 +28,74 @@ def main(args: argparse.Namespace):
     # Set directory to the dir of XFOIL
     os.chdir(cfg['setup']['xfoil_path'])
 
+    # Create separate output folders for DUMP & CPWR (if it doesn't already exist)
+    for output_type in ('dump_dir', 'cpwr_dir'):
+        if not os.path.isdir(cfg['setup'][output_type]):
+            os.mkdir(cfg['setup'][output_type])
+
+    # Create alias for _helper in getOutputFileName(), for DUMP & CPWR
+    getOutputFileNameDUMP = getOutputFileName(OutputFiles.DUMP, cfg['setup']['dump_dir'])
+    getOutputFileNameCPWR = getOutputFileName(OutputFiles.CPWR, cfg['setup']['cpwr_dir'])
+
+    # Map each 'NACAxxxx' from args.aerofoil_names to a tuple with its name '.txt' path, for DUMP & CPWR
+    zipped_namesDUMP: list[tuple[str, str]] = [(name, getOutputFileNameDUMP(name)) for name in args.aerofoil_names]
+    zipped_namesCPWR: list[tuple[str, str]] = [(name, getOutputFileNameCPWR(name)) for name in args.aerofoil_names]
+
+
 
     # --------------------------------------------------------------------------
-    # XFOIL input file writer
+    # XFOIL PLOTTING
 
-    for airfoil_name in args.aerofoil_names:
+    # Plotting CPWR  -  Cp vs x/c
+    plt.figure()
+    plt.gca().invert_yaxis()
+    plt.axhline(y=0, color='black', linestyle='-', )
 
-        output_file_nameDUMP = getOutputFileNameDUMP(airfoil_name)
-        output_file_nameCPWR = getOutputFileNameCPWR(airfoil_name)
+    for naca_name, file_name in zipped_namesCPWR:
+        polar_data = np.loadtxt(file_name, skiprows=3)
 
-        for output_file_name in (output_file_nameDUMP, output_file_nameCPWR):
-            if os.path.exists(output_file_name):
-                os.remove(output_file_name)
+        # Find 1st point that is for lower layer of airfoil
+        layer_boundary = np.argmax(polar_data[:, 1] < 0)
 
-        with open("input_file.in", 'w') as input_file:
-            input_file.write(airfoil_name + '\n')
+        # Plot upper surface of aerofoil (as solid line)
+        plt.plot(polar_data[0:layer_boundary, 0] / cfg['single_variables']['chord'], polar_data[0:layer_boundary, 2],
+                 label=naca_name)
 
-            input_file.write("PPAR\n")
-            input_file.write(f"n {cfg['setup']['n_panelnodes']}\n\n\n")
+        # Plot lower surface of aerofoil (as dashed line)
+        plt.plot(polar_data[layer_boundary:, 0] / cfg['single_variables']['chord'], polar_data[layer_boundary:, 2], ':',
+                 color=plt.gca().lines[-1].get_color())
 
-            input_file.write("PANE\n")
-            input_file.write("OPER\n")
-
-            if cfg['variables']['Re'] >= 0:
-                input_file.write(f"Visc {cfg['variables']['Re']}\n")
-
-            input_file.write(f"ITER {cfg['setup']['n_iter']}\n")
-
-            input_file.write(f"{args.input_type} {args.input_value}\n")
-            input_file.write(f"DUMP {output_file_nameDUMP}\n")
-            input_file.write(f"CPWR {output_file_nameCPWR}\n\n")
-
-            input_file.write("\n\n")
-            input_file.write("quit\n")
+    plt.title("Cp Vs x/c")
+    plt.xlabel("x/c")
+    plt.ylabel("Cp")
+    plt.grid()
+    plt.legend(loc='upper right', fontsize='x-small')
+    plt.show()
 
 
-        # Running calculations in XFOIL
-        Popen("xfoil.exe < input_file.in", shell=True)
-        time.sleep(1.5)
+    # --------------------------------------------------------------------------------------------------
+    # Plotting DUMP  -  Cf vs x
+    for naca_name, file_name in zipped_namesDUMP:
+        plt.figure()
+        polar_data = np.loadtxt(file_name, skiprows=1)
+
+        # The 1st point that is for lower layer of airfoil
+        layer_boundary = np.argmax(polar_data[:, 2] < 0)
+
+        # Plot upper surface of aerofoil
+        plt.plot(polar_data[0:layer_boundary, 1], polar_data[0:layer_boundary, 6], label=f"upper-{naca_name}")
+
+        # Plot lower surface of aerofoil
+        plt.plot(polar_data[layer_boundary:, 1], polar_data[layer_boundary:, 6], label=f"lower-{naca_name}")
+
+        plt.xlim(0, 1)
+        plt.ylim(0, 0.1)
+        plt.title(f"Cf Vs x - {naca_name}")
+        plt.xlabel("x")
+        plt.ylabel("Cf")
+        plt.grid()
+        plt.legend()
+        plt.show()
 
 
 
@@ -84,12 +107,6 @@ if __name__ == "__main__":
     # parser.add_argument("-i", "--input_path", help="Path of frames directory", default="PART_1-Vids/Temp-frames/Seg-files")
     # parser.add_argument("-n", "--new_plot", help="wipes the ", default="PART_1-Vids/Outputs/output_vid.mp4")
 
-    parser.add_argument("-t", "--input_type", type=str, help="Calculate based off cl or alpha", required=True, choices=['cl', 'alpha'])
-    parser.add_argument("-v", "--input_value", type=restricted_float, help="Value of cl or alpha", required=True)
-
-    parser.add_argument('-o', '--delete_old', action='store_false', default=True,
-                        help='If NOT FLAGGED (true), deletes any previously stored data for inputted aerofoils, else if FLAGGED (false), appends new data to this reviously stored data')
-
     parser.add_argument('-n', '--aerofoil_names', nargs='+', default=['NACA0012', 'NACA0013', 'NACA0014'],
                         help='NACA 4-digit aerofoils to test (in "NACAxxxx" form)')
 
@@ -97,56 +114,3 @@ if __name__ == "__main__":
     main(args)
 
     # print(args)
-
-
-"""
-
-
-
-# -------------------------------------------------------------------------------
-## PLOTTING DATA
-
-# Plotting CL Vs alpha
-plt.figure()
-for airfoil_name in airfoil_names:
-    polar_data = np.loadtxt(getOutputFileName(airfoil_name), skiprows=12)
-    plt.plot(polar_data[:, 0], polar_data[:, 1], label=airfoil_name)
-
-plt.axhline(y=cl_required, color='tab:pink', linestyle='-.', label='Min CL Required')
-plt.title("CL Vs Angle of attack")
-plt.xlabel("Angle of attack (deg)")
-plt.ylabel("CL")
-plt.grid()
-plt.legend()
-plt.show()
-
-
-# Plotting CD Vs alpha
-plt.figure()
-for airfoil_name in airfoil_names:
-    polar_data = np.loadtxt(getOutputFileName(airfoil_name), skiprows=12)
-    plt.plot(polar_data[:, 0], polar_data[:, 2], label=airfoil_name)
-
-plt.title("CD Vs Angle of attack")
-plt.xlabel("Angle of attack (deg)")
-plt.ylabel("CD")
-plt.grid()
-plt.legend()
-plt.show()
-
-
-# Plotting CL Vs CD
-plt.figure(3)
-for airfoil_name in airfoil_names:
-    polar_data = np.loadtxt(getOutputFileName(airfoil_name), skiprows=12)
-    plt.plot(polar_data[:, 2], polar_data[:, 1], label=airfoil_name)
-
-plt.axhline(y=cl_required, color='tab:pink', linestyle='-.', label='Min CL Required')
-plt.title("CL Vs CD")
-plt.xlabel("CD")
-plt.ylabel("CL")
-plt.grid()
-plt.legend()
-plt.show()
-
-# """
