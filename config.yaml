@@ -1,13 +1,21 @@
 setup:
   xfoil_path: "C:/Users/nicho/OneDrive/Documents/XFoil"      # Path to xfoil directory
+
+  # Path files, relative to 'xfoil_path'
+  polarfiles_dir: "Saved_Polarfiles"
+  dump_dir: "Saved_DUMPfiles"
+  cpwr_dir: "Saved_CPWRfiles"
+
   n_panelnodes: 400
   n_iter: 400
+
 
 variables:
   cl_required: 0.576
   Re: -1                # If Re == -1, then inviscid flow, else viscous flow
 
-# For Iterations calc
+
+# Variables specific to Iterations.py
 iterations:
   alpha_i: -2
   alpha_f: 20
