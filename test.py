@@ -33,7 +33,3 @@ subprocess.run('python Single_calc.py -t cl -v 0.5 -n NACA1418')
 # subprocess.run('python Sequence_plot.py')
 # subprocess.run('python Sequence_plot.py -n NACA1418')
 # subprocess.run('python Sequence_plot.py -n NACA1416 NACA1417')
-
-
-
-

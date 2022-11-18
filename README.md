@@ -8,14 +8,15 @@ XFoil API for Python
 * 1 - Install the newest version of XFoil and unzip. <br>
 The download can be found at https://web.mit.edu/drela/Public/web/xfoil/
 
-* 2 - Download python module requirements from the 'requirements.txt' file
+* 2 - Download python module requirements from the 'requirements.txt' file.
 
-* 3 - In 'config.yaml', change the 'xfoil_path' variable to the absolute path XFoil's directory
-
+* 3 - In 'config.yaml', change the 'xfoil_path' variable to the absolute path XFoil's directory.
 
 
 ## HOW TO USE:
 The API is accessed via command line arguments. <p>
+
+In 'config.yaml', modify the values for your calculations <p>
 
 ### Getting data:
 
